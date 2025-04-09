@@ -11,8 +11,12 @@ export function SignUpPage() {
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [dni, setDni] = useState("");
+    const [nombres, setNombres] = useState("")
+    const [apellido, setApellido] = useState("")
     const [errorMsg, setErrorMsg] = useState("");
     const navigate = useNavigate();
+
+    const apiUrl = import.meta.env.VITE_API_URL
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -25,15 +29,17 @@ export function SignUpPage() {
                 return;
             }
 
+
             // Llamada al endpoint de registro
-            const response = await axios.post("/api/auth/register", {
+            const response = await axios.post(`${apiUrl}/auth/register`, {
                 email,
                 password,
-                dni
+                dni,
+                nombres,
+                apellido
             });
-            // Supongamos que el endpoint retorna un objeto con la data del usuario registrado
+
             console.log("Registro exitoso:", response.data);
-            // Redirige al usuario a la vista de login o chat
             navigate("/login");
         } catch (error: any) {
             setErrorMsg(error.response?.data?.detail || "Error al registrar usuario");
@@ -60,6 +66,28 @@ export function SignUpPage() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-4">
+                        <div className="flex flex-col space-y-1">
+                            <Label htmlFor="nombres">Nombre</Label>
+                            <Input
+                                id="nombres"
+                                type="text"
+                                placeholder="Ingresa tu/s nombre/s"
+                                value={nombres}
+                                onChange={(e) => setNombres(e.target.value)}
+                                required
+                            ></Input>
+                        </div>
+                        <div className="flex flex-col space-y-1">
+                            <Label htmlFor="apellido">Apellido</Label>
+                            <Input
+                                id="apellido"
+                                type="text"
+                                placeholder="Ingresa tu apellido"
+                                value={apellido}
+                                onChange={(e) => setApellido(e.target.value)}
+                                required
+                            />
+                        </div>
                         <div className="flex flex-col space-y-1">
                             <Label htmlFor="email">Correo electrónico</Label>
                             <Input
