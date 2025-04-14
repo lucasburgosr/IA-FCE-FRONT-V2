@@ -14,12 +14,14 @@ export function SignUpPage() {
     const [nombres, setNombres] = useState("")
     const [apellido, setApellido] = useState("")
     const [errorMsg, setErrorMsg] = useState("");
+    const [loading, setLoading] = useState(false)
     const navigate = useNavigate();
 
     const apiUrl = import.meta.env.VITE_API_URL
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        setLoading(true)
         setErrorMsg("");
         try {
 
@@ -43,6 +45,8 @@ export function SignUpPage() {
             navigate("/login");
         } catch (error: any) {
             setErrorMsg(error.response?.data?.detail || "Error al registrar usuario");
+        } finally {
+            setLoading(false)
         }
     };
 
@@ -110,7 +114,6 @@ export function SignUpPage() {
                                 required
                             />
                         </div>
-                        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
                         <div className="flex flex-col space-y-1">
                             <Label htmlFor="confirmPassword">Repetir contraseña</Label>
                             <Input
@@ -122,7 +125,6 @@ export function SignUpPage() {
                                 required
                             />
                         </div>
-                        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
                         <div className="flex flex-col space-y-1">
                             <Label htmlFor="dni">DNI</Label>
                             <Input
@@ -134,7 +136,8 @@ export function SignUpPage() {
                                 required
                             />
                         </div>
-                        <Button type="submit" className="w-full mt-2 bg-red-700 hover:bg-red-800 text-white">
+                        {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
+                        <Button type="submit" className="w-full mt-2 bg-red-700 hover:bg-red-800 text-white" loading={loading}>
                             Registrarse
                         </Button>
                     </form>

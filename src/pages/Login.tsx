@@ -1,13 +1,45 @@
 import React from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
+import axios from "axios"
+import { useNavigate } from "react-router-dom"
 
 const Login = () => {
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [errorMsg, setErrorMsg] = useState("")
+  const navigate = useNavigate()
+
+  const apiUrl = import.meta.env.VITE_API_URL
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
-    // Lógica para autenticar al usuario
+    setLoading(true)
+    setErrorMsg("")
+    try {
+      
+      const response = await axios.post(`${apiUrl}/auth/login`, {
+        email,
+        password
+      });
+
+      const { token } = response.data;
+
+      localStorage.setItem("token", token)
+
+      navigate("/chat")
+
+    } catch(error: any) {
+      setErrorMsg(error.response?.data?.detail || "Error al iniciar sesión")
+    } finally {
+      setLoading(false)
+    }
+
   }
 
   return (
@@ -27,6 +59,8 @@ const Login = () => {
                 id="email"
                 type="email"
                 placeholder="Ingresa tu correo"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
@@ -36,12 +70,16 @@ const Login = () => {
                 id="password"
                 type="password"
                 placeholder="********"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 required
               />
             </div>
+            {errorMsg && <p className="text-red-500 text-sm">{errorMsg}</p>}
             <Button 
               type="submit" 
               className="w-full mt-2 bg-red-700 hover:bg-red-800 text-white"
+              loading={loading}
             >
               Iniciar sesión
             </Button>

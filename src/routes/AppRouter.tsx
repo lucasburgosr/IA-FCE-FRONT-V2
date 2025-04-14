@@ -1,17 +1,24 @@
 import React from 'react'
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { Navigate, BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import ProtectedRoute from './ProtectedRoute'
 import Chat from '@/pages/Chat'
 import { Login } from '@/pages/Login'
 import { SignUpPage } from '@/pages/SignUp'
+import Layout from './Layout'
 
 const AppRouter: React.FC = () => {
 
     return (
         <Router>
             <Routes>
-                <Route path='/chat' element={<Chat></Chat>}></Route>
-                <Route path='/login' element={<Login></Login>}></Route>
+                <Route path='/login' element={<Login />}></Route>
                 <Route path='/registro' element={<SignUpPage />}></Route>
+                <Route element={<ProtectedRoute />}>
+                    <Route element={<Layout />}>
+                        <Route path='/chat' element={<Chat />}></Route>
+                    </Route>
+                </Route>
+                <Route path="*" element={<Navigate to="/login" />} />
             </Routes>
         </Router>
     )

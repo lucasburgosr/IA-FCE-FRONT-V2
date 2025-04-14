@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ChatMessage from "@/components/chat-message"
 import TypingIndicator from "@/components/ui/typing-indicator"
+import Navbar from "@/components/navbar"
 
 export default function ChatPage() {
   const { messages, input, handleInputChange, handleSubmit } = useChat()
@@ -33,7 +34,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-gray-50">
+    <div className="flex h-screen bg-gray-50">
       <main className="flex-1 p-4 md:p-6 flex flex-col max-w-4xl mx-auto w-full">
         <Card className="flex-1 flex flex-col overflow-hidden rounded-xl shadow-lg border-gray-200">
           <div className="flex-1 overflow-y-auto p-4 space-y-6" id="chat-messages">
