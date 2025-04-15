@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card"
 import axios from "axios"
 import { useNavigate } from "react-router-dom"
+import { useAuthStore } from "@/store/authStore"
 
 const Login = () => {
 
@@ -16,6 +17,8 @@ const Login = () => {
   const navigate = useNavigate()
 
   const apiUrl = import.meta.env.VITE_API_URL
+
+  const setAuth = useAuthStore((state) => state.setAuth)
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -28,9 +31,12 @@ const Login = () => {
         password
       });
 
-      const { token } = response.data;
+      const { token, usuario_id } = response.data;
 
       localStorage.setItem("token", token)
+
+      console.log(email)
+      setAuth(token, email, usuario_id)
 
       navigate("/chat")
 

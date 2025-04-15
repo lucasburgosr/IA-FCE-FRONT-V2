@@ -17,77 +17,67 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-import { Calendar, Home, Inbox, Search, Settings } from "lucide-react"
+import { Home, Inbox, Settings, LogOut } from "lucide-react"
 import { useEffect, useState } from "react"
 import axios from "axios"
-import Asistente from "@/types/Asistente"
-import { data } from "react-router-dom"
-
+import { useAuthStore } from "@/store/authStore"
+import Alumno from "@/types/Alumno"
 
 const items = [
     {
-        title: "Home",
-        url: "#",
+        title: "Tutor FCE",
+        url: "/chat",
         icon: Home,
     },
     {
-        title: "Inbox",
+        title: "Evaluaciones",
         url: "#",
         icon: Inbox,
     },
     {
-        title: "Calendar",
-        url: "#",
-        icon: Calendar,
-    },
-    {
-        title: "Search",
-        url: "#",
-        icon: Search,
-    },
-    {
-        title: "Settings",
+        title: "Ajustes",
         url: "#",
         icon: Settings,
     },
+    {
+        title: "Cerrar sesión",
+        url: "#",
+        icon: Settings,
+    }
 ]
 
 export function AppSidebar() {
 
-    const [asistentes, setAsistentes] = useState<Asistente[]>([])
-    const [asistente, setAsistente] = useState<Asistente>()
+    const [alumno, setAlumno] = useState<Alumno>()
+    const token = localStorage.getItem("token")
+    const id = useAuthStore((state) => state.usuario_id)
+
     const apiUrl = import.meta.env.VITE_API_URL
 
     useEffect(() => {
-        let cancelToken = axios.CancelToken.source()
 
-        async function fetchAsistentes() {
-            try {
-                const response = await axios.get(`${apiUrl}/asistentes/`, {
-                    cancelToken: cancelToken.token,
-                });
-                setAsistentes(response.data)
-            } catch (err) {
-                if (axios.isCancel(err)) {
-                    console.log("Request cerrada")
-                } else  {
-                    console.error("Error al obtener los asistentes: ", err)
+        async function getAlumno() {
+            const response = await axios.get(`${apiUrl}/alumnos/${id}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
                 }
-            }
+            });
+
+            console.log(response.data)
+            setAlumno(response.data)
         }
-        fetchAsistentes()
 
-        return () => {
-            // Cancelar la petición si el componente se desmonta
-            cancelToken.cancel();
-          };
-    },[])
+        getAlumno()
 
-    console.log(asistentes)
+    }, [])
+
+    const handleSelectAsistente = () => {
+
+    }
 
     return (
         <Sidebar>
-            <SidebarContent>
+            <SidebarContent className="pl-3.5">
                 <SidebarGroup>
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
@@ -97,7 +87,7 @@ export function AppSidebar() {
                                     <SelectValue placeholder="" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
-                                    {asistentes.map((asistente) => (
+                                    {alumno?.asistentes.map((asistente) => (
                                         <SelectItem key={asistente.asistente_id} value={asistente.asistente_id}>{asistente.nombre}</SelectItem>
                                     ))}
                                 </SelectContent>

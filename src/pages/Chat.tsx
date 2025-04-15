@@ -9,11 +9,14 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ChatMessage from "@/components/chat-message"
 import TypingIndicator from "@/components/ui/typing-indicator"
-import Navbar from "@/components/navbar"
+import { useAsistenteStore } from "@/store/asistenteStore"
+import axios from "axios"
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange, handleSubmit } = useChat()
+  const { messages, input, handleInputChange } = useChat()
   const [isTyping, setIsTyping] = useState(false)
+  const asistente_id = useAsistenteStore((state) => state.asistente_id)
+  const apiUrl = import.meta.env.VITE_API_URL
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -24,13 +27,21 @@ export default function ChatPage() {
 
     try {
       // Call the handleSubmit function
-      await handleSubmit(e)
+      await handleSubmit()
     } catch (error) {
       console.error("Error submitting message:", error)
     } finally {
       // Clear typing indicator when done (whether success or error)
       setIsTyping(false)
     }
+  }
+
+  const handleSubmit = async () => {
+
+    const response = await axios.post(`${apiUrl}/thread/`,
+
+    )
+
   }
 
   return (
