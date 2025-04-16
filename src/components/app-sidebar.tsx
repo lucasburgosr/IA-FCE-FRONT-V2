@@ -22,6 +22,7 @@ import { useEffect, useState } from "react"
 import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
 import Alumno from "@/types/Alumno"
+import { useAsistenteStore } from "@/store/asistenteStore"
 
 const items = [
     {
@@ -51,6 +52,7 @@ export function AppSidebar() {
     const [alumno, setAlumno] = useState<Alumno>()
     const token = localStorage.getItem("token")
     const id = useAuthStore((state) => state.usuario_id)
+    const setAsistenteId = useAsistenteStore(state => state.setAsistenteId)
 
     const apiUrl = import.meta.env.VITE_API_URL
 
@@ -71,9 +73,11 @@ export function AppSidebar() {
 
     }, [])
 
-    const handleSelectAsistente = () => {
-
+    const handleSelectAsistente = (id: string) => {  
+        setAsistenteId(id)
     }
+
+    console.log(alumno?.asistentes)
 
     return (
         <Sidebar>
@@ -82,7 +86,7 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu className="justify-center">
-                            <Select>
+                            <Select onValueChange={handleSelectAsistente}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="" />
                                 </SelectTrigger>

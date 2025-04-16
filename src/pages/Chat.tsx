@@ -11,12 +11,43 @@ import ChatMessage from "@/components/chat-message"
 import TypingIndicator from "@/components/ui/typing-indicator"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import axios from "axios"
+import { useAuthStore } from "@/store/authStore"
 
 export default function ChatPage() {
   const { messages, input, handleInputChange } = useChat()
   const [isTyping, setIsTyping] = useState(false)
+  const [threadId, setThreadId] = useState(null)
+  const [creandoThread, setCreandoThread] = useState(false)
   const asistente_id = useAsistenteStore((state) => state.asistente_id)
+  const alumnoId = useAuthStore((state) => state.usuario_id)
   const apiUrl = import.meta.env.VITE_API_URL
+  const token = localStorage.getItem("token")
+
+  const handleCreateThread = async () => {
+    setCreandoThread(true)
+    console.log("Asistente: ",asistente_id)
+
+    try {
+      const response = await axios.post(`${apiUrl}/threads/`, {
+        alumnoId,
+        asistente_id
+      },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+      setThreadId(response.data.thread_id)
+      return response.data
+
+
+    } catch (error) {
+      console.error("No se pudo crear el thread: ", error)
+    } finally {
+      setCreandoThread(false)
+    }
+
+  }
 
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
@@ -27,21 +58,29 @@ export default function ChatPage() {
 
     try {
       // Call the handleSubmit function
-      await handleSubmit()
+      //await handleSubmit()
     } catch (error) {
       console.error("Error submitting message:", error)
     } finally {
-      // Clear typing indicator when done (whether success or error)
       setIsTyping(false)
     }
   }
 
-  const handleSubmit = async () => {
-
-    const response = await axios.post(`${apiUrl}/thread/`,
-
-    )
-
+  if (!threadId) {
+    return (
+      <div className="flex flex-col h-screen bg-white items-center justify-center">
+        <p className="text-xl font-semibold text-gray-700 mb-4">
+          Inicia conversación para empezar el chat
+        </p>
+        <Button
+          onClick={handleCreateThread}
+          disabled={creandoThread}
+          className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg"
+        >
+          {creandoThread ? "Iniciando..." : "Iniciar conversación"}
+        </Button>
+      </div>
+    );
   }
 
   return (
