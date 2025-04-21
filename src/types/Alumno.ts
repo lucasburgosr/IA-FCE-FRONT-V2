@@ -10,6 +10,6 @@ export default interface Alumno {
     last_login: Date
     asistentes: Asistente[]
     preguntas: Pregunta[]
-    thread: Thread[]
+    threads: Thread[]
     evaluaciones: Evaluacion[]
 }

@@ -12,14 +12,15 @@ import TypingIndicator from "@/components/ui/typing-indicator"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
+import { useAlumnoStore } from "@/store/alumnoStore"
 
 export default function ChatPage() {
   const { messages, input, handleInputChange } = useChat()
   const [isTyping, setIsTyping] = useState(false)
-  const [threadId, setThreadId] = useState(null)
   const [creandoThread, setCreandoThread] = useState(false)
   const asistente_id = useAsistenteStore((state) => state.asistente_id)
   const alumnoId = useAuthStore((state) => state.usuario_id)
+  const alumno = useAlumnoStore((state) => state.alumno)
   const apiUrl = import.meta.env.VITE_API_URL
   const token = localStorage.getItem("token")
 
@@ -37,7 +38,6 @@ export default function ChatPage() {
             Authorization: `Bearer ${token}`
           }
         })
-      setThreadId(response.data.thread_id)
       return response.data
 
 
@@ -52,21 +52,42 @@ export default function ChatPage() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     if (input.trim().length === 0) return
-
-    // Set typing indicator before submission
     setIsTyping(true)
 
+    const thread_id = alumno?.threads[0].thread_id
+
     try {
-      // Call the handleSubmit function
-      //await handleSubmit()
+      
+      const response = await axios.post(`${apiUrl}/threads/${thread_id}`, {
+        asistente_id,
+        thread_id,
+        input
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+
+      console.log(response.data)
+
     } catch (error) {
       console.error("Error submitting message:", error)
     } finally {
       setIsTyping(false)
     }
   }
+  
+  if (!asistente_id) {
+    return (
+      <div className="flex flex-col h-screen bg-white items-center justify-center">
+        <p className="text-xl font-semibold text-gray-700 mb-4">
+          Seleccioná un asistente
+        </p>
+      </div>
+    )
+  }
 
-  if (!threadId) {
+  if (!alumno?.threads[0]) {
     return (
       <div className="flex flex-col h-screen bg-white items-center justify-center">
         <p className="text-xl font-semibold text-gray-700 mb-4">

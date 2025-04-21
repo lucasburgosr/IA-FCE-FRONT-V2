@@ -23,6 +23,7 @@ import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
 import Alumno from "@/types/Alumno"
 import { useAsistenteStore } from "@/store/asistenteStore"
+import { useAlumnoStore } from "@/store/alumnoStore"
 
 const items = [
     {
@@ -53,10 +54,14 @@ export function AppSidebar() {
     const token = localStorage.getItem("token")
     const id = useAuthStore((state) => state.usuario_id)
     const setAsistenteId = useAsistenteStore(state => state.setAsistenteId)
+    const alumnoStore = useAlumnoStore((state) => state.alumno)
+    const setAlumnoStore = useAlumnoStore((state) => state.setAlumno)
 
     const apiUrl = import.meta.env.VITE_API_URL
 
     useEffect(() => {
+
+        setAsistenteId("")
 
         async function getAlumno() {
             const response = await axios.get(`${apiUrl}/alumnos/${id}`, {
@@ -67,6 +72,7 @@ export function AppSidebar() {
 
             console.log(response.data)
             setAlumno(response.data)
+            setAlumnoStore(response.data)
         }
 
         getAlumno()
@@ -76,8 +82,6 @@ export function AppSidebar() {
     const handleSelectAsistente = (id: string) => {  
         setAsistenteId(id)
     }
-
-    console.log(alumno?.asistentes)
 
     return (
         <Sidebar>
