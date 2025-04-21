@@ -6,6 +6,7 @@ interface AsistenteState {
     instructions: string | null,
     asistente_id: string | null,
     setAsistenteId: (id: string) => void
+    clearAsistente: () => void
 }
 
 export const useAsistenteStore = create<AsistenteState, [["zustand/persist", AsistenteState]]>(

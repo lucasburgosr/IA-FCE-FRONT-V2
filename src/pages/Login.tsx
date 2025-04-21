@@ -35,7 +35,6 @@ const Login = () => {
 
       localStorage.setItem("token", token)
 
-      console.log(email)
       setAuth(token, email, usuario_id)
 
       navigate("/chat")
@@ -45,7 +44,6 @@ const Login = () => {
     } finally {
       setLoading(false)
     }
-
   }
 
   return (

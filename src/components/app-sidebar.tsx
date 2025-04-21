@@ -1,3 +1,8 @@
+"use client"
+
+import { useEffect, useCallback } from "react"
+import axios from "axios"
+
 import {
     Sidebar,
     SidebarContent,
@@ -18,70 +23,67 @@ import {
 } from "@/components/ui/select"
 
 import { Home, Inbox, Settings, LogOut } from "lucide-react"
-import { useEffect, useState } from "react"
-import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
-import Alumno from "@/types/Alumno"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
+import type Alumno from "@/types/Alumno"
+import { useNavigate } from "react-router-dom"
 
-const items = [
-    {
-        title: "Tutor FCE",
-        url: "/chat",
-        icon: Home,
-    },
-    {
-        title: "Evaluaciones",
-        url: "#",
-        icon: Inbox,
-    },
-    {
-        title: "Ajustes",
-        url: "#",
-        icon: Settings,
-    },
-    {
-        title: "Cerrar sesión",
-        url: "#",
-        icon: Settings,
-    }
+const menuItems = [
+    { title: "Tutor FCE", url: "/chat", icon: Home },
+    { title: "Evaluaciones", url: "#", icon: Inbox },
+    { title: "Ajustes", url: "#", icon: Settings },
+    { title: "Cerrar sesión", url: "#", icon: LogOut },
 ]
 
 export function AppSidebar() {
-
-    const [alumno, setAlumno] = useState<Alumno>()
-    const token = localStorage.getItem("token")
-    const id = useAuthStore((state) => state.usuario_id)
-    const setAsistenteId = useAsistenteStore(state => state.setAsistenteId)
-    const alumnoStore = useAlumnoStore((state) => state.alumno)
-    const setAlumnoStore = useAlumnoStore((state) => state.setAlumno)
+    // — Store selectors —
+    const alumnoId = useAuthStore(s => s.usuario_id)
+    const alumno = useAlumnoStore(s => s.alumno)
+    const clearAuth = useAuthStore(s => s.clearAuth)
+    const clearAlumno = useAlumnoStore(s => s.clearAlumno)
+    const clearAsistente = useAsistenteStore(s => s.clearAsistente)
+    const setAlumno = useAlumnoStore(s => s.setAlumno)
+    const setAsistenteId = useAsistenteStore(s => s.setAsistenteId)
+    const navigate = useNavigate()
 
     const apiUrl = import.meta.env.VITE_API_URL
+    const token = localStorage.getItem("token") ?? ""
 
-    useEffect(() => {
+    const axiosConfig = {
+        headers: { Authorization: `Bearer ${token}` }
+    }
 
-        setAsistenteId("")
+    const handleLogout = useCallback(() => {
+        localStorage.removeItem("token")
 
-        async function getAlumno() {
-            const response = await axios.get(`${apiUrl}/alumnos/${id}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            });
+        clearAlumno()
+        clearAuth()
+        clearAsistente()
 
-            console.log(response.data)
-            setAlumno(response.data)
-            setAlumnoStore(response.data)
-        }
-
-        getAlumno()
-
+        navigate("/login")
     }, [])
 
-    const handleSelectAsistente = (id: string) => {  
+    const fetchAlumno = useCallback(async () => {
+        try {
+            const res = await axios.get<Alumno>(
+                `${apiUrl}/alumnos/${alumnoId}`,
+                axiosConfig
+            )
+            setAlumno(res.data)
+        } catch (err) {
+            console.error("Error al obtener alumno:", err)
+        }
+    }, [apiUrl, alumnoId, axiosConfig, setAlumno])
+
+    useEffect(() => {
+        if (alumnoId) fetchAlumno()
+            console.log("Este está imprimiendo")
+    }, [alumnoId])
+
+    const handleSelectAsistente = useCallback((id: string) => {
         setAsistenteId(id)
-    }
+    }, [setAsistenteId])
 
     return (
         <Sidebar>
@@ -89,24 +91,45 @@ export function AppSidebar() {
                 <SidebarGroup>
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
-                        <SidebarMenu className="justify-center">
+                        <SidebarMenu className="justify-center space-y-4">
+                            {/* Selector de Asistente */}
                             <Select onValueChange={handleSelectAsistente}>
                                 <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="" />
+                                    <SelectValue placeholder="Elige un asistente…" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-white">
-                                    {alumno?.asistentes.map((asistente) => (
-                                        <SelectItem key={asistente.asistente_id} value={asistente.asistente_id}>{asistente.nombre}</SelectItem>
+                                    {alumno?.asistentes.map(a => (
+                                        <SelectItem
+                                            key={a.asistente_id}
+                                            value={a.asistente_id}
+                                        >
+                                            {a.nombre}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
-                            {items.map((item) => (
+
+                            {/* Resto del menú */}
+                            {menuItems.map(item => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
-                                            <item.icon />
-                                            <span>{item.title}</span>
-                                        </a>
+                                        {item.title === "Cerrar sesión" ? (
+                                            <button
+                                                onClick={handleLogout}
+                                                className="flex items-center space-x-2 w-full text-left"
+                                            >
+                                                <item.icon />
+                                                <span>{item.title}</span>
+                                            </button>
+                                        ) : (
+                                            <a
+                                                href={item.url}
+                                                className="flex items-center space-x-2"
+                                            >
+                                                <item.icon />
+                                                <span>{item.title}</span>
+                                            </a>
+                                        )}
                                     </SidebarMenuButton>
                                 </SidebarMenuItem>
                             ))}

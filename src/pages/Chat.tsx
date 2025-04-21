@@ -1,93 +1,132 @@
 "use client"
 
-import type React from "react"
-
-import { useState } from "react"
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback
+} from "react"
 import { useChat } from "ai/react"
+import axios from "axios"
 import { Send } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import ChatMessage from "@/components/chat-message"
 import TypingIndicator from "@/components/ui/typing-indicator"
+
 import { useAsistenteStore } from "@/store/asistenteStore"
-import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
+import type Mensaje from "@/types/Mensaje"
 
 export default function ChatPage() {
-  const { messages, input, handleInputChange } = useChat()
-  const [isTyping, setIsTyping] = useState(false)
-  const [creandoThread, setCreandoThread] = useState(false)
-  const asistente_id = useAsistenteStore((state) => state.asistente_id)
-  const alumnoId = useAuthStore((state) => state.usuario_id)
-  const alumno = useAlumnoStore((state) => state.alumno)
+  // Estados y hooks
+  const { input, handleInputChange } = useChat()
+  const [messages, setMessages]     = useState<Mensaje[]>([])
+  const [isTyping, setIsTyping]     = useState(false)
+  const [creatingThread, setCreatingThread] = useState(false)
+
+  const asistenteId = useAsistenteStore(s => s.asistente_id)
+  const alumnoId    = useAuthStore(s => s.usuario_id)
+  const alumno      = useAlumnoStore(s => s.alumno)
+  const threadId    = alumno?.threads?.[0]?.thread_id
+
   const apiUrl = import.meta.env.VITE_API_URL
-  const token = localStorage.getItem("token")
+  const token  = localStorage.getItem("token") ?? ""
 
-  const handleCreateThread = async () => {
-    setCreandoThread(true)
-    console.log("Asistente: ",asistente_id)
+  const axiosConfig = React.useMemo(
+    () => ({
+      headers: { Authorization: `Bearer ${token}` }
+    }),
+    [token]
+  )
 
-    try {
-      const response = await axios.post(`${apiUrl}/threads/`, {
-        alumnoId,
-        asistente_id
-      },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        })
-      return response.data
+  const bottomRef = useRef<HTMLDivElement>(null)
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [messages])
 
-    } catch (error) {
-      console.error("No se pudo crear el thread: ", error)
-    } finally {
-      setCreandoThread(false)
+  useEffect(() => {
+    if (!threadId || !asistenteId) return
+
+    const fetchMensajes = async () => {
+      try {
+        const res = await axios.get<Mensaje[]>(
+          `${apiUrl}/threads/${threadId}/messages`,
+          axiosConfig
+        )
+        setMessages(res.data)
+      } catch (err) {
+        console.error("Error fetching mensajes:", err)
+      }
     }
+    console.log("Este está imprimiendo")
+    fetchMensajes()
+  }, [threadId, asistenteId, apiUrl, axiosConfig])
 
-  }
-
-  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    if (input.trim().length === 0) return
-    setIsTyping(true)
-
-    const thread_id = alumno?.threads[0].thread_id
-
+  const handleCreateThread = useCallback(async () => {
+    if (!asistenteId) return
+    setCreatingThread(true)
     try {
-      
-      const response = await axios.post(`${apiUrl}/threads/${thread_id}`, {
-        asistente_id,
-        thread_id,
-        input
-      }, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      console.log(response.data)
-
-    } catch (error) {
-      console.error("Error submitting message:", error)
+      const res = await axios.post(
+        `${apiUrl}/threads/`,
+        { alumnoId, asistente_id: asistenteId },
+        axiosConfig
+      )
+      if (Array.isArray(res.data?.messages)) {
+        setMessages(res.data.messages)
+      }
+    } catch (err) {
+      console.error("No se pudo crear el thread:", err)
     } finally {
-      setIsTyping(false)
+      setCreatingThread(false)
     }
-  }
-  
-  if (!asistente_id) {
+  }, [alumnoId, asistenteId, apiUrl, axiosConfig])
+
+  const handleSubmit = useCallback(
+    async (e: React.FormEvent) => {
+      e.preventDefault()
+      const texto = input.trim()
+      if (!texto || !threadId || !asistenteId) return
+
+      const userMsg: Mensaje = {
+        id:    `u-${Date.now()}`,
+        rol:   "user",
+        texto,
+        fecha: new Date()
+      }
+      setMessages(prev => [...prev, userMsg])
+      setIsTyping(true)
+
+      try {
+        const res = await axios.post<Mensaje[]>(
+          `${apiUrl}/threads/${threadId}`,
+          { thread_id: threadId, asistente_id: asistenteId, input: texto },
+          axiosConfig
+        )
+        setMessages(res.data)
+      } catch (err) {
+        console.error("Error submitting message:", err)
+      } finally {
+        setIsTyping(false)
+      }
+    },
+    [input, threadId, asistenteId, apiUrl, axiosConfig]
+  )
+
+  if (!asistenteId) {
     return (
       <div className="flex flex-col h-screen bg-white items-center justify-center">
-        <p className="text-xl font-semibold text-gray-700 mb-4">
+        <p className="text-xl font-semibold text-gray-700">
           Seleccioná un asistente
         </p>
       </div>
     )
   }
 
-  if (!alumno?.threads[0]) {
+  if (!threadId) {
     return (
       <div className="flex flex-col h-screen bg-white items-center justify-center">
         <p className="text-xl font-semibold text-gray-700 mb-4">
@@ -95,35 +134,38 @@ export default function ChatPage() {
         </p>
         <Button
           onClick={handleCreateThread}
-          disabled={creandoThread}
+          disabled={creatingThread}
           className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white rounded-lg"
         >
-          {creandoThread ? "Iniciando..." : "Iniciar conversación"}
+          {creatingThread ? "Iniciando..." : "Iniciar conversación"}
         </Button>
       </div>
-    );
+    )
   }
 
   return (
     <div className="flex h-screen bg-gray-50">
       <main className="flex-1 p-4 md:p-6 flex flex-col max-w-4xl mx-auto w-full">
         <Card className="flex-1 flex flex-col overflow-hidden rounded-xl shadow-lg border-gray-200">
-          <div className="flex-1 overflow-y-auto p-4 space-y-6" id="chat-messages">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
             {messages.length === 0 ? (
               <div className="flex items-center justify-center h-full">
                 <p className="text-gray-500 text-center">
-                  Bienvenido al Tutor IA de la FCE <br />
+                  Bienvenido al Tutor IA de la FCE
+                  <br />
                   Preguntame sobre matemática para empezar.
                 </p>
               </div>
             ) : (
-              messages.map((message) => <ChatMessage key={message.id} message={message} />)
+              messages.map(msg => (
+                <ChatMessage key={msg.id} message={msg} />
+              ))
             )}
             {isTyping && <TypingIndicator />}
+            <div ref={bottomRef} />
           </div>
-
           <div className="border-t border-gray-200 p-4">
-            <form onSubmit={onSubmit} className="flex space-x-2">
+            <form onSubmit={handleSubmit} className="flex space-x-2">
               <div className="flex-1 overflow-hidden rounded-lg border border-gray-300 focus-within:border-red-800 focus-within:ring-1 focus-within:ring-red-800">
                 <textarea
                   className="w-full resize-none border-0 bg-transparent p-3 focus:outline-none focus:ring-0"
@@ -131,10 +173,10 @@ export default function ChatPage() {
                   rows={1}
                   value={input}
                   onChange={handleInputChange}
-                  onKeyDown={(e) => {
+                  onKeyDown={e => {
                     if (e.key === "Enter" && !e.shiftKey) {
                       e.preventDefault()
-                      onSubmit(e as any)
+                      handleSubmit(e as any)
                     }
                   }}
                 />
@@ -153,4 +195,3 @@ export default function ChatPage() {
     </div>
   )
 }
-
