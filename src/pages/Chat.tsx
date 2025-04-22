@@ -35,6 +35,8 @@ export default function ChatPage() {
   const apiUrl = import.meta.env.VITE_API_URL
   const token  = localStorage.getItem("token") ?? ""
 
+  //console.log("ID DEL ASISTENTE SELECCIONADO ", asistenteId)
+
   const axiosConfig = React.useMemo(
     () => ({
       headers: { Authorization: `Bearer ${token}` }
@@ -62,7 +64,6 @@ export default function ChatPage() {
         console.error("Error fetching mensajes:", err)
       }
     }
-    console.log("Este está imprimiendo")
     fetchMensajes()
   }, [threadId, asistenteId, apiUrl, axiosConfig])
 
@@ -144,7 +145,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen overflow-hidden bg-gray-50">
       <main className="flex-1 p-4 md:p-6 flex flex-col max-w-4xl mx-auto w-full">
         <Card className="flex-1 flex flex-col overflow-hidden rounded-xl shadow-lg border-gray-200">
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
@@ -162,7 +163,6 @@ export default function ChatPage() {
               ))
             )}
             {isTyping && <TypingIndicator />}
-            <div ref={bottomRef} />
           </div>
           <div className="border-t border-gray-200 p-4">
             <form onSubmit={handleSubmit} className="flex space-x-2">

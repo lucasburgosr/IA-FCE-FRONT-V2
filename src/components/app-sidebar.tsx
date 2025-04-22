@@ -78,7 +78,6 @@ export function AppSidebar() {
 
     useEffect(() => {
         if (alumnoId) fetchAlumno()
-            console.log("Este está imprimiendo")
     }, [alumnoId])
 
     const handleSelectAsistente = useCallback((id: string) => {

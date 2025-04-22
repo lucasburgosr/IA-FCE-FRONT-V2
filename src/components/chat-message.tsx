@@ -1,9 +1,12 @@
+
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Avatar } from "@/components/ui/avatar"
 import { Bot, User } from "lucide-react"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
+import rehypeKatex from "rehype-katex"
+import remarkMath from "remark-math"
 import type Mensaje from "@/types/Mensaje"
 
 
@@ -25,13 +28,22 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       <Card
         className={cn(
           "px-4 py-3 max-w-[85%] text-sm rounded-xl shadow-sm",
-          isUser ? "bg-red-800 text-white" : "bg-white border border-gray-200",
+          isUser
+            ? "bg-red-800 text-white"
+            : "bg-white border border-gray-200"
         )}
       >
+
         <div className="whitespace-pre-wrap">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
-            {message.texto}
-          </ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+          {message.texto
+            .replace(/\\\(/g, "$")
+            .replace(/\\\)/g, "$")
+            .replace(/\\\[/g, "$$")
+            .replace(/\\\]/g, "$$")
+            .replace(/\\begin{align\*}/g, "$$")
+            .replace(/\\end{align\*}/g, "$$")}
+        </ReactMarkdown>
         </div>
       </Card>
 
