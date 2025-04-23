@@ -16,7 +16,7 @@ import {
     CardFooter
 } from "@/components/ui/card"
 
-export function SignUpPage() {
+export default function SignUpPage() {
     const navigate = useNavigate()
     const apiUrl = import.meta.env.VITE_API_URL
 
@@ -33,7 +33,7 @@ export function SignUpPage() {
     const [errorMsg, setErrorMsg] = useState("")
     const [loading, setLoading] = useState(false)
 
-    // 2) Config Axios memoizada
+    // 2) Configuración de axios
     const axiosConfig = { headers: { "Content-Type": "application/json" } }
 
     // 3) Handler genérico para inputs

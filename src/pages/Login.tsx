@@ -10,16 +10,21 @@ import { useAuthStore } from "@/store/authStore"
 
 const Login = () => {
 
+  // Credenciales de inicio de sesión
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+
+  // Estados
   const [loading, setLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState("")
-  const navigate = useNavigate()
 
-  const apiUrl = import.meta.env.VITE_API_URL
-
+  // Store de usuario 
   const setAuth = useAuthStore((state) => state.setAuth)
 
+  const navigate = useNavigate()
+  const apiUrl = import.meta.env.VITE_API_URL
+
+  // Handler de inicio de sesión
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setLoading(true)
@@ -31,13 +36,17 @@ const Login = () => {
         password
       });
 
-      const { token, usuario_id } = response.data;
+      const { token, usuario_id, type } = response.data;
 
       localStorage.setItem("token", token)
 
-      setAuth(token, email, usuario_id)
+      setAuth(token, email, usuario_id, type)
 
-      navigate("/chat")
+      if (type === "alumno") {
+        navigate("/chat")
+      } else if (type === "profesor") {
+        navigate("/chat")
+      }
 
     } catch(error: any) {
       setErrorMsg(error.response?.data?.detail || "Error al iniciar sesión")
@@ -99,4 +108,4 @@ const Login = () => {
   )
 }
 
-export { Login }
+export default Login

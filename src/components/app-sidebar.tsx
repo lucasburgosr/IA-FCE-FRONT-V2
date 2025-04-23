@@ -28,6 +28,8 @@ import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
 import type Alumno from "@/types/Alumno"
 import { useNavigate } from "react-router-dom"
+import { useProfesorStore } from "@/store/profesorStore"
+import Profesor from "@/types/Profesor"
 
 const menuItems = [
     { title: "Tutor FCE", url: "/chat", icon: Home },
@@ -37,23 +39,34 @@ const menuItems = [
 ]
 
 export function AppSidebar() {
-    // — Store selectors —
-    const alumnoId = useAuthStore(s => s.usuario_id)
-    const alumno = useAlumnoStore(s => s.alumno)
+    // Store de usuario
+    const usuarioId = useAuthStore(s => s.usuario_id)
+    const type = useAuthStore(s => s.type)
     const clearAuth = useAuthStore(s => s.clearAuth)
-    const clearAlumno = useAlumnoStore(s => s.clearAlumno)
-    const clearAsistente = useAsistenteStore(s => s.clearAsistente)
-    const setAlumno = useAlumnoStore(s => s.setAlumno)
-    const setAsistenteId = useAsistenteStore(s => s.setAsistenteId)
-    const navigate = useNavigate()
 
+    // Store de alumno
+    const alumno = useAlumnoStore(s => s.alumno)
+    const clearAlumno = useAlumnoStore(s => s.clearAlumno)
+    const setAlumno = useAlumnoStore(s => s.setAlumno)
+
+    // Store de profesor
+    const setProfesor = useProfesorStore(s => s.setProfesor)
+    // const profesor = useProfesorStore(s => s.profesor)
+
+    // Store de asistente
+    const clearAsistente = useAsistenteStore(s => s.clearAsistente)
+    const setAsistenteId = useAsistenteStore(s => s.setAsistenteId)
+
+    const navigate = useNavigate()
     const apiUrl = import.meta.env.VITE_API_URL
     const token = localStorage.getItem("token") ?? ""
 
+    // Configuración de axios para requests
     const axiosConfig = {
         headers: { Authorization: `Bearer ${token}` }
     }
 
+    // Handler para cerrar sesión
     const handleLogout = useCallback(() => {
         localStorage.removeItem("token")
 
@@ -64,22 +77,36 @@ export function AppSidebar() {
         navigate("/login")
     }, [])
 
-    const fetchAlumno = useCallback(async () => {
+    // Función que hace un GET al servidor para traer un usuario según sea profesor o alumno
+    const fetchUsuario = useCallback(async () => {
         try {
-            const res = await axios.get<Alumno>(
-                `${apiUrl}/alumnos/${alumnoId}`,
-                axiosConfig
-            )
-            setAlumno(res.data)
+            if (type === "alumno") {
+                const res = await axios.get<Alumno>(
+                    `${apiUrl}/alumnos/${usuarioId}`,
+                    axiosConfig
+                )
+                setAlumno(res.data)
+            }
+            if (type === "profesor") {
+                const res = await axios.get<Profesor>(
+                    `${apiUrl}/profesores/${usuarioId}`,
+                    axiosConfig
+                )
+                setProfesor(res.data)
+            }
+
         } catch (err) {
-            console.error("Error al obtener alumno:", err)
+            console.error("Error al obtener el usuario:", err)
         }
-    }, [apiUrl, alumnoId, axiosConfig, setAlumno])
+    }, [apiUrl, usuarioId, axiosConfig, setAlumno, setProfesor])
 
+
+    // Hook para montar el usuario al cargar la página
     useEffect(() => {
-        if (alumnoId) fetchAlumno()
-    }, [alumnoId])
+        if (usuarioId) fetchUsuario()
+    }, [usuarioId])
 
+    //Handler para establecer el asistente a usar en el chatbot
     const handleSelectAsistente = useCallback((id: string) => {
         setAsistenteId(id)
     }, [setAsistenteId])
@@ -91,24 +118,24 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu className="justify-center space-y-4">
-                            {/* Selector de Asistente */}
-                            <Select onValueChange={handleSelectAsistente}>
-                                <SelectTrigger className="w-[180px]">
-                                    <SelectValue placeholder="Elige un asistente…" />
-                                </SelectTrigger>
-                                <SelectContent className="bg-white">
-                                    {alumno?.asistentes.map(a => (
-                                        <SelectItem
-                                            key={a.asistente_id}
-                                            value={a.asistente_id}
-                                        >
-                                            {a.nombre}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-
-                            {/* Resto del menú */}
+                            {/*Renderizamos el interior del sidebar según si el tipo de usuario*/}
+                            {type === "alumno" &&
+                                <Select onValueChange={handleSelectAsistente}>
+                                    <SelectTrigger className="w-[180px]">
+                                        <SelectValue placeholder="Elige un asistente…" />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-white">
+                                        {alumno?.asistentes.map(a => (
+                                            <SelectItem
+                                                key={a.asistente_id}
+                                                value={a.asistente_id}
+                                            >
+                                                {a.nombre}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            }
                             {menuItems.map(item => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>

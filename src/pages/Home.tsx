@@ -20,7 +20,7 @@ import { useAuthStore } from "@/store/authStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
 import type Mensaje from "@/types/Mensaje"
 
-export default function ChatPage() {
+export default function Home() {
   // Estados y hooks
   const { input, handleInputChange } = useChat()
   const [messages, setMessages]     = useState<Mensaje[]>([])

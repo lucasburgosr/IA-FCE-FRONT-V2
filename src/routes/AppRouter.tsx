@@ -1,9 +1,9 @@
 import React from 'react'
 import { Navigate, BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import ProtectedRoute from './ProtectedRoute'
-import Chat from '@/pages/Chat'
-import { Login } from '@/pages/Login'
-import { SignUpPage } from '@/pages/SignUp'
+import Home from '@/pages/Home'
+import Login from '@/pages/Login'
+import SignUpPage from '@/pages/SignUp'
 import Layout from './Layout'
 
 const AppRouter: React.FC = () => {
@@ -15,7 +15,7 @@ const AppRouter: React.FC = () => {
                 <Route path='/registro' element={<SignUpPage />}></Route>
                 <Route element={<ProtectedRoute />}>
                     <Route element={<Layout />}>
-                        <Route path='/chat' element={<Chat />}></Route>
+                        <Route path='/chat' element={<Home />}></Route>
                     </Route>
                 </Route>
                 <Route path="*" element={<Navigate to="/login" />} />
