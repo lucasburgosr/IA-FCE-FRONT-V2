@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-import { Home, Inbox, Settings, LogOut } from "lucide-react"
+import { Home, Inbox, Settings, LogOut, User } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
@@ -36,12 +36,13 @@ const menuItems = [
     { title: "Evaluaciones", url: "#", icon: Inbox },
     { title: "Ajustes", url: "#", icon: Settings },
     { title: "Cerrar sesión", url: "#", icon: LogOut },
+    { title: "Alumnos", url: "/alumnos", icon: User }
 ]
 
 export function AppSidebar() {
     // Store de usuario
     const usuarioId = useAuthStore(s => s.usuario_id)
-    const type = useAuthStore(s => s.type)
+    const userType = useAuthStore(s => s.userType)
     const clearAuth = useAuthStore(s => s.clearAuth)
 
     // Store de alumno
@@ -80,14 +81,14 @@ export function AppSidebar() {
     // Función que hace un GET al servidor para traer un usuario según sea profesor o alumno
     const fetchUsuario = useCallback(async () => {
         try {
-            if (type === "alumno") {
+            if (userType === "alumno") {
                 const res = await axios.get<Alumno>(
                     `${apiUrl}/alumnos/${usuarioId}`,
                     axiosConfig
                 )
                 setAlumno(res.data)
             }
-            if (type === "profesor") {
+            if (userType === "profesor") {
                 const res = await axios.get<Profesor>(
                     `${apiUrl}/profesores/${usuarioId}`,
                     axiosConfig
@@ -118,47 +119,62 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu className="justify-center space-y-4">
-                            {/*Renderizamos el interior del sidebar según si el tipo de usuario*/}
-                            {type === "alumno" &&
-                                <Select onValueChange={handleSelectAsistente}>
-                                    <SelectTrigger className="w-[180px]">
-                                        <SelectValue placeholder="Elige un asistente…" />
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-white">
-                                        {alumno?.asistentes.map(a => (
-                                            <SelectItem
-                                                key={a.asistente_id}
-                                                value={a.asistente_id}
-                                            >
-                                                {a.nombre}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            }
-                            {menuItems.map(item => (
-                                <SidebarMenuItem key={item.title}>
-                                    <SidebarMenuButton asChild>
-                                        {item.title === "Cerrar sesión" ? (
-                                            <button
-                                                onClick={handleLogout}
-                                                className="flex items-center space-x-2 w-full text-left"
-                                            >
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </button>
-                                        ) : (
-                                            <a
-                                                href={item.url}
-                                                className="flex items-center space-x-2"
-                                            >
-                                                <item.icon />
-                                                <span>{item.title}</span>
-                                            </a>
-                                        )}
-                                    </SidebarMenuButton>
-                                </SidebarMenuItem>
-                            ))}
+
+                            <Select onValueChange={handleSelectAsistente}>
+                                <SelectTrigger className="w-[180px]">
+                                    <SelectValue placeholder="Elige un asistente…" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-white">
+                                    {alumno?.asistentes.map(a => (
+                                        <SelectItem
+                                            key={a.asistente_id}
+                                            value={a.asistente_id}
+                                        >
+                                            {a.nombre}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+
+                            {menuItems
+                                .filter(item =>
+                                    !(item.title === "Alumnos" && userType !== "profesor")
+                                )
+                                .map(item => (
+                                    <SidebarMenuItem key={item.title}>
+                                        <SidebarMenuButton asChild>
+                                            {item.title === "Cerrar sesión" ? (
+                                                <button
+                                                    onClick={handleLogout}
+                                                    className="flex items-center space-x-2 w-full text-left"
+                                                >
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </button>
+
+                                            ) : item.title === "Alumnos" ? (
+                                                /* Sólo llega aquí si userType==="profesor" */
+                                                <a
+                                                    href={item.url}
+                                                    className="flex items-center space-x-2 w-full text-left"
+                                                >
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </a>
+
+                                            ) : (
+                                                <a
+                                                    href={item.url}
+                                                    className="flex items-center space-x-2"
+                                                >
+                                                    <item.icon />
+                                                    <span>{item.title}</span>
+                                                </a>
+                                            )}
+                                        </SidebarMenuButton>
+                                    </SidebarMenuItem>
+                                ))}
+
                         </SidebarMenu>
                     </SidebarGroupContent>
                 </SidebarGroup>

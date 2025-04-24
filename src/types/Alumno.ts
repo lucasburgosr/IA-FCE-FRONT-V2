@@ -5,6 +5,8 @@ import Thread from "./Thread"
 
 export default interface Alumno {
     email: string
+    nombres: string
+    apellido: string
     firebase_uid: string | null
     id: number
     last_login: Date

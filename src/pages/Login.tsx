@@ -36,15 +36,15 @@ const Login = () => {
         password
       });
 
-      const { token, usuario_id, type } = response.data;
+      const { token, usuario_id, type: userType } = response.data;
 
       localStorage.setItem("token", token)
 
-      setAuth(token, email, usuario_id, type)
+      setAuth(token, email, usuario_id, userType)
 
-      if (type === "alumno") {
+      if (userType === "alumno") {
         navigate("/chat")
-      } else if (type === "profesor") {
+      } else if (userType === "profesor") {
         navigate("/chat")
       }
 

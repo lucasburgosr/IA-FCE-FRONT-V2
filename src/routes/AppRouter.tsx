@@ -5,6 +5,7 @@ import Home from '@/pages/Home'
 import Login from '@/pages/Login'
 import SignUpPage from '@/pages/SignUp'
 import Layout from './Layout'
+import { Alumnos } from '@/pages/Alumnos'
 
 const AppRouter: React.FC = () => {
 
@@ -16,6 +17,9 @@ const AppRouter: React.FC = () => {
                 <Route element={<ProtectedRoute />}>
                     <Route element={<Layout />}>
                         <Route path='/chat' element={<Home />}></Route>
+                    </Route>
+                    <Route element={<Layout />}>
+                        <Route path='/alumnos' element={<Alumnos />}></Route>
                     </Route>
                 </Route>
                 <Route path="*" element={<Navigate to="/login" />} />
