@@ -30,12 +30,12 @@ export default function Home() {
   const asistenteId = useAsistenteStore(s => s.asistente_id)
   const alumnoId    = useAuthStore(s => s.usuario_id)
   const alumno      = useAlumnoStore(s => s.alumno)
-  const threadId    = alumno?.threads?.[0]?.thread_id
+  const threadId    = alumno?.threads?.[0]?.id
 
   const apiUrl = import.meta.env.VITE_API_URL
   const token  = localStorage.getItem("token") ?? ""
-
-  //console.log("ID DEL ASISTENTE SELECCIONADO ", asistenteId)
+  
+  const [sesionId, setSesionId] = useState<number | null>(null)
 
   const axiosConfig = React.useMemo(
     () => ({
@@ -51,6 +51,47 @@ export default function Home() {
   }, [messages])
 
   useEffect(() => {
+    if (!threadId || !asistenteId) return;
+
+    (async () => {
+      try {
+        const res = await axios.post (
+          `${apiUrl}/sesiones/iniciar/${alumnoId}`, {}, {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
+          }
+        );
+        console.log(res.data)
+        setSesionId(res.data.session_id);
+      } catch (err) {
+        console.error("No se pudo iniciar la sesión:", err);
+      }
+    })();
+  }, [threadId]);
+
+  useEffect(() => {
+    if (sesionId === null) return;
+
+    const endSession = async () => {
+      try {
+        await axios.post(
+          `${apiUrl}/sesiones/finalizar`,
+          { session_id: sesionId },
+          axiosConfig
+        );
+      } catch (err) {
+        console.error("Error finalizando la sesión:", err);
+      }
+    };
+
+    // 3a) Cuando React desmonte el componente
+    return () => {
+      endSession();
+    };
+  }, [sesionId]);
+
+  useEffect(() => {
     if (!threadId || !asistenteId) return
 
     const fetchMensajes = async () => {
@@ -64,6 +105,7 @@ export default function Home() {
         console.error("Error fetching mensajes:", err)
       }
     }
+    
     fetchMensajes()
   }, [threadId, asistenteId, apiUrl, axiosConfig])
 
@@ -104,10 +146,11 @@ export default function Home() {
       try {
         const res = await axios.post<Mensaje[]>(
           `${apiUrl}/threads/${threadId}`,
-          { thread_id: threadId, asistente_id: asistenteId, input: texto },
+          { id: threadId, asistente_id: asistenteId, input: texto, alumno_id: alumnoId },
           axiosConfig
         )
         setMessages(res.data)
+        
       } catch (err) {
         console.error("Error submitting message:", err)
       } finally {
