@@ -19,22 +19,23 @@ import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAuthStore } from "@/store/authStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
 import type Mensaje from "@/types/Mensaje"
+import MessageList from "@/components/message-list"
 
 export default function Home() {
   // Estados y hooks
-  const { input, handleInputChange } = useChat()
-  const [messages, setMessages]     = useState<Mensaje[]>([])
-  const [isTyping, setIsTyping]     = useState(false)
+  const { input, setInput, handleInputChange } = useChat()
+  const [messages, setMessages] = useState<Mensaje[]>([])
+  const [isTyping, setIsTyping] = useState(false)
   const [creatingThread, setCreatingThread] = useState(false)
 
   const asistenteId = useAsistenteStore(s => s.asistente_id)
-  const alumnoId    = useAuthStore(s => s.usuario_id)
-  const alumno      = useAlumnoStore(s => s.alumno)
-  const threadId    = alumno?.threads?.[0]?.id
+  const alumnoId = useAuthStore(s => s.usuario_id)
+  const alumno = useAlumnoStore(s => s.alumno)
+  const threadId = alumno?.threads?.[0]?.id
 
   const apiUrl = import.meta.env.VITE_API_URL
-  const token  = localStorage.getItem("token") ?? ""
-  
+  const token = localStorage.getItem("token") ?? ""
+
   const [sesionId, setSesionId] = useState<number | null>(null)
 
   const axiosConfig = React.useMemo(
@@ -55,20 +56,21 @@ export default function Home() {
 
     (async () => {
       try {
-        const res = await axios.post (
-          `${apiUrl}/sesiones/iniciar/${alumnoId}`, {}, {
-            headers: {
-              Authorization: `Bearer ${token}`
-            }
+        const res = await axios.post(
+          `${apiUrl}/sesiones/iniciar/${alumnoId}`, { thread_id: threadId }, {
+          headers: {
+            Authorization: `Bearer ${token}`
           }
+        }
         );
         console.log(res.data)
-        setSesionId(res.data.session_id);
+        setSesionId(res.data.sesion_id);
       } catch (err) {
         console.error("No se pudo iniciar la sesión:", err);
       }
     })();
-  }, [threadId]);
+  }, [threadId, asistenteId]);
+
 
   useEffect(() => {
     if (sesionId === null) return;
@@ -77,7 +79,7 @@ export default function Home() {
       try {
         await axios.post(
           `${apiUrl}/sesiones/finalizar`,
-          { session_id: sesionId },
+          { sesion_id: sesionId },
           axiosConfig
         );
       } catch (err) {
@@ -105,7 +107,7 @@ export default function Home() {
         console.error("Error fetching mensajes:", err)
       }
     }
-    
+
     fetchMensajes()
   }, [threadId, asistenteId, apiUrl, axiosConfig])
 
@@ -131,12 +133,13 @@ export default function Home() {
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault()
+      setInput("")
       const texto = input.trim()
       if (!texto || !threadId || !asistenteId) return
 
       const userMsg: Mensaje = {
-        id:    `u-${Date.now()}`,
-        rol:   "user",
+        id: `u-${Date.now()}`,
+        rol: "user",
         texto,
         fecha: new Date()
       }
@@ -150,7 +153,7 @@ export default function Home() {
           axiosConfig
         )
         setMessages(res.data)
-        
+
       } catch (err) {
         console.error("Error submitting message:", err)
       } finally {
@@ -192,20 +195,8 @@ export default function Home() {
       <main className="flex-1 p-4 md:p-6 flex flex-col max-w-4xl mx-auto w-full">
         <Card className="flex-1 flex flex-col overflow-hidden rounded-xl shadow-lg border-gray-200">
           <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            {messages.length === 0 ? (
-              <div className="flex items-center justify-center h-full">
-                <p className="text-gray-500 text-center">
-                  Bienvenido al Tutor IA de la FCE
-                  <br />
-                  Preguntame sobre matemática para empezar.
-                </p>
-              </div>
-            ) : (
-              messages.map(msg => (
-                <ChatMessage key={msg.id} message={msg} />
-              ))
-            )}
-            {isTyping && <TypingIndicator />}
+            <MessageList messages={messages} isTyping={isTyping} />
+            <div ref={bottomRef} />
           </div>
           <div className="border-t border-gray-200 p-4">
             <form onSubmit={handleSubmit} className="flex space-x-2">

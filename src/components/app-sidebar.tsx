@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-import { Home, Inbox, Settings, LogOut, User } from "lucide-react"
+import { Home, Inbox, Bot, LogOut, User } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
@@ -33,10 +33,9 @@ import Profesor from "@/types/Profesor"
 
 const menuItems = [
     { title: "Tutor FCE", url: "/chat", icon: Home },
-    { title: "Evaluaciones", url: "#", icon: Inbox },
-    { title: "Ajustes", url: "#", icon: Settings },
+    { title: "Alumnos", url: "/alumnos", icon: User },
+    { title: "Asistente", url: "/asistente", icon: Bot },
     { title: "Cerrar sesión", url: "#", icon: LogOut },
-    { title: "Alumnos", url: "/alumnos", icon: User }
 ]
 
 export function AppSidebar() {
@@ -137,9 +136,12 @@ export function AppSidebar() {
                             </Select>
 
                             {menuItems
-                                .filter(item =>
-                                    !(item.title === "Alumnos" && userType !== "profesor")
-                                )
+                                .filter(item => {
+                                    if (["Alumnos", "Asistente"].includes(item.title) && userType !== "profesor") {
+                                        return false;
+                                    }
+                                    return true;
+                                })
                                 .map(item => (
                                     <SidebarMenuItem key={item.title}>
                                         <SidebarMenuButton asChild>

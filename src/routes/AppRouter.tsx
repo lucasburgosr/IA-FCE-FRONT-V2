@@ -6,6 +6,7 @@ import Login from '@/pages/Login'
 import SignUpPage from '@/pages/SignUp'
 import Layout from './Layout'
 import { Alumnos } from '@/pages/Alumnos'
+import { AsistenteEdit } from '@/pages/Asistente'
 
 const AppRouter: React.FC = () => {
 
@@ -20,6 +21,9 @@ const AppRouter: React.FC = () => {
                     </Route>
                     <Route element={<Layout />}>
                         <Route path='/alumnos' element={<Alumnos />}></Route>
+                    </Route>
+                    <Route element={<Layout />}>
+                        <Route path='/asistente' element={<AsistenteEdit />}></Route>
                     </Route>
                 </Route>
                 <Route path="*" element={<Navigate to="/login" />} />

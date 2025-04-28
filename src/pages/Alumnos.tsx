@@ -72,6 +72,8 @@ export function Alumnos() {
                   <TableHead>Nombre</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Último inicio de sesión</TableHead>
+                  <TableHead>Mensajes enviados</TableHead>
+                  <TableHead>Tiempo de interacción</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -83,6 +85,8 @@ export function Alumnos() {
                     <TableCell>
                       {new Date(a.last_login).toLocaleString()}
                     </TableCell>
+                    <TableCell>{a.mensajes_enviados}</TableCell>
+                    <TableCell>{a.tiempo_interaccion}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
