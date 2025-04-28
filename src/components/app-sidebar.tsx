@@ -22,7 +22,7 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 
-import { Home, Inbox, Bot, LogOut, User } from "lucide-react"
+import { Home, Bot, LogOut, User } from "lucide-react"
 import { useAuthStore } from "@/store/authStore"
 import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
@@ -51,7 +51,6 @@ export function AppSidebar() {
 
     // Store de profesor
     const setProfesor = useProfesorStore(s => s.setProfesor)
-    // const profesor = useProfesorStore(s => s.profesor)
 
     // Store de asistente
     const clearAsistente = useAsistenteStore(s => s.clearAsistente)
@@ -93,6 +92,7 @@ export function AppSidebar() {
                     axiosConfig
                 )
                 setProfesor(res.data)
+                setAsistenteId(res.data.materia.asistente.asistente_id)
             }
 
         } catch (err) {
@@ -100,8 +100,6 @@ export function AppSidebar() {
         }
     }, [apiUrl, usuarioId, axiosConfig, setAlumno, setProfesor])
 
-
-    // Hook para montar el usuario al cargar la página
     useEffect(() => {
         if (usuarioId) fetchUsuario()
     }, [usuarioId])
@@ -118,8 +116,7 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu className="justify-center space-y-4">
-
-                            <Select onValueChange={handleSelectAsistente}>
+                            {alumno && <Select onValueChange={handleSelectAsistente}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Elige un asistente…" />
                                 </SelectTrigger>
@@ -133,7 +130,7 @@ export function AppSidebar() {
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
-                            </Select>
+                            </Select>}
 
                             {menuItems
                                 .filter(item => {

@@ -12,9 +12,6 @@ import { Send } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import ChatMessage from "@/components/chat-message"
-import TypingIndicator from "@/components/ui/typing-indicator"
-
 import { useAsistenteStore } from "@/store/asistenteStore"
 import { useAuthStore } from "@/store/authStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
@@ -45,11 +42,18 @@ export default function Home() {
     [token]
   )
 
-  const bottomRef = useRef<HTMLDivElement>(null)
+  const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: "smooth",
+      })
+    }
+  }, [messages]);
+  
 
   useEffect(() => {
     if (!threadId || !asistenteId) return;
@@ -194,9 +198,8 @@ export default function Home() {
     <div className="flex h-screen overflow-hidden bg-gray-50">
       <main className="flex-1 p-4 md:p-6 flex flex-col max-w-4xl mx-auto w-full">
         <Card className="flex-1 flex flex-col overflow-hidden rounded-xl shadow-lg border-gray-200">
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4 space-y-6" ref={messagesContainerRef}>
             <MessageList messages={messages} isTyping={isTyping} />
-            <div ref={bottomRef} />
           </div>
           <div className="border-t border-gray-200 p-4">
             <form onSubmit={handleSubmit} className="flex space-x-2">

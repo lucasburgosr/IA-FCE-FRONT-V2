@@ -35,7 +35,7 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       >
 
         <div className="whitespace-pre-wrap">
-        <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+        <ReactMarkdown remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
           {message.texto
             .replace(/\\\(/g, "$")
             .replace(/\\\)/g, "$")

@@ -8,52 +8,52 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import Asistente from "@/types/Asistente";
+import { AsistenteOpenAI } from "@/types/AsistenteOpenAI";
+import { useAsistenteStore } from "@/store/asistenteStore";
 
 export function AsistenteEdit() {
   //const { asistente_id } = useParams<{ asistente_id: string }>();
   const navigate = useNavigate();
 
-  const [Asistente, setAssistant] = useState<Asistente | null>(null);
+  const [Asistente, setAssistant] = useState<Asistente | AsistenteOpenAI | null>(null);
   const [name, setName] = useState("");
   const [instructions, setInstructions] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const asistenteId = useAsistenteStore(s => s.asistente_id)
   const apiUrl = import.meta.env.VITE_API_URL;
 
-  //asistente_id = "asst_LMnzwqHscAlIEBRRrWzB6myW"
-
-  // 1. Fetch Asistente on mount
   useEffect(() => {
 
     setLoading(true);
     axios
-      .get<Asistente>(`${apiUrl}/asistentes/asst_LMnzwqHscAlIEBRRrWzB6myW`, {
+      .get<AsistenteOpenAI>(`${apiUrl}/asistentes/${asistenteId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
       })
       .then(({ data }) => {
         setAssistant(data);
-        setName(data.name); // <-- nombre, no name
+        setName(data.name);
         setInstructions(data.instructions);
       })
       .catch((err) => setError(`No se pudo cargar el asistente ${err}`))
       .finally(() => setLoading(false));
   }, []);
 
-  // 2. Handle form submit
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    //if (!asistente_id) return;
+
     setLoading(true);
     setError("");
     try {
       await axios.put(
-        `${apiUrl}/asistentes/asst_LMnzwqHscAlIEBRRrWzB6myW`, 
+        `${apiUrl}/asistentes/asst_LMnzwqHscAlIEBRRrWzB6myW`,
         {
-          name: name,            // --> OpenAI espera 'name'
+          name: name,
           instructions: instructions
-        }, 
+        },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -61,7 +61,7 @@ export function AsistenteEdit() {
         }
       );
       // Al terminar, redirigir o mostrar mensaje
-      navigate("/asistente"); 
+      navigate("/asistente");
     } catch (err: any) {
       setError(err.response?.data?.detail || "Error al actualizar");
     } finally {

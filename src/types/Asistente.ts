@@ -1,5 +1,5 @@
-export default interface Asistente {
-    name: string,
+export default interface AsistenteDB {
+    nombre: string,
     asistente_id: string
     instructions: string
 }
