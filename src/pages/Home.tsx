@@ -83,7 +83,7 @@ export default function Home() {
       try {
         await axios.post(
           `${apiUrl}/sesiones/finalizar`,
-          { sesion_id: sesionId },
+          { alumno_id: alumnoId, sesion_id: sesionId, thread_id: threadId },
           axiosConfig
         );
       } catch (err) {

@@ -14,6 +14,7 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import Alumno from "@/types/Alumno"
+import { ResumenCell } from "@/components/resumen-modal"
 
 export function Alumnos() {
   const navigate   = useNavigate()
@@ -74,6 +75,7 @@ export function Alumnos() {
                   <TableHead>Último inicio de sesión</TableHead>
                   <TableHead>Mensajes enviados</TableHead>
                   <TableHead>Tiempo de interacción</TableHead>
+                  <TableHead>Última sesión</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -87,6 +89,7 @@ export function Alumnos() {
                     </TableCell>
                     <TableCell>{a.mensajes_enviados}</TableCell>
                     <TableCell>{a.tiempo_interaccion}</TableCell>
+                    <ResumenCell resumen={a.resumen_ultima_sesion}></ResumenCell>
                   </TableRow>
                 ))}
               </TableBody>

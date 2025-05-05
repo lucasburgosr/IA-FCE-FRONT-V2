@@ -16,4 +16,5 @@ export default interface Alumno {
     preguntas: Pregunta[]
     threads: Thread[]
     evaluaciones: Evaluacion[]
+    resumen_ultima_sesion: string
 }
