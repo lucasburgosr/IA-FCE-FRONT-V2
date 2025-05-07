@@ -17,6 +17,7 @@ import { useAuthStore } from "@/store/authStore"
 import { useAlumnoStore } from "@/store/alumnoStore"
 import type Mensaje from "@/types/Mensaje"
 import MessageList from "@/components/message-list"
+import { useProfesorStore } from "@/store/profesorStore"
 
 export default function Home() {
   // Estados y hooks
@@ -25,10 +26,14 @@ export default function Home() {
   const [isTyping, setIsTyping] = useState(false)
   const [creatingThread, setCreatingThread] = useState(false)
 
+  const userType = useAuthStore(s => s.userType)
+  const isProfesor = userType === "profesor"
+
   const asistenteId = useAsistenteStore(s => s.asistente_id)
+  const setAsistenteId = useAsistenteStore(s => s.setAsistenteId)
   const alumnoId = useAuthStore(s => s.usuario_id)
   const alumno = useAlumnoStore(s => s.alumno)
-  const threadId = alumno?.threads?.[0]?.id
+  const profesor = useProfesorStore(s => s.profesor)
 
   const apiUrl = import.meta.env.VITE_API_URL
   const token = localStorage.getItem("token") ?? ""
@@ -42,6 +47,18 @@ export default function Home() {
     [token]
   )
 
+  // Thread temporal para profesor
+  const temporalThreadIdKey = "temp_profesor_thread"
+  const getOrCreateTempThreadId = () => {
+    const existingId = localStorage.getItem(temporalThreadIdKey)
+    if (existingId) return existingId
+    const tempId = `prof-${Date.now()}`
+    localStorage.setItem(temporalThreadIdKey, tempId)
+    return tempId
+  }
+  const tempThreadId = isProfesor ? getOrCreateTempThreadId() : null
+  const threadId = isProfesor ? tempThreadId : alumno?.threads?.[0]?.id
+
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -53,21 +70,16 @@ export default function Home() {
       })
     }
   }, [messages]);
-  
+
 
   useEffect(() => {
-    if (!threadId || !asistenteId) return;
+    if (isProfesor || !threadId || !asistenteId) return;
 
     (async () => {
       try {
         const res = await axios.post(
-          `${apiUrl}/sesiones/iniciar/${alumnoId}`, { thread_id: threadId }, {
-          headers: {
-            Authorization: `Bearer ${token}`
-          }
-        }
+          `${apiUrl}/sesiones/iniciar/${alumnoId}`, { thread_id: threadId }, axiosConfig
         );
-        console.log(res.data)
         setSesionId(res.data.sesion_id);
       } catch (err) {
         console.error("No se pudo iniciar la sesión:", err);
@@ -75,9 +87,15 @@ export default function Home() {
     })();
   }, [threadId, asistenteId]);
 
+  useEffect(() => {
+    if (isProfesor && profesor?.materia?.asistente?.asistente_id) {
+      setAsistenteId(profesor.materia.asistente.asistente_id)
+    }
+  }, [isProfesor, profesor])
+
 
   useEffect(() => {
-    if (sesionId === null) return;
+    if (isProfesor || sesionId === null) return;
 
     const endSession = async () => {
       try {
@@ -91,7 +109,6 @@ export default function Home() {
       }
     };
 
-    // 3a) Cuando React desmonte el componente
     return () => {
       endSession();
     };
@@ -114,6 +131,17 @@ export default function Home() {
 
     fetchMensajes()
   }, [threadId, asistenteId, apiUrl, axiosConfig])
+
+  useEffect(() => {
+    if (!isProfesor) return
+
+    const cleanup = () => {
+      localStorage.removeItem(temporalThreadIdKey)
+    }
+
+    window.addEventListener("beforeunload", cleanup)
+    return () => window.removeEventListener("beforeunload", cleanup)
+  }, [])
 
   const handleCreateThread = useCallback(async () => {
     if (!asistenteId) return
@@ -150,10 +178,17 @@ export default function Home() {
       setMessages(prev => [...prev, userMsg])
       setIsTyping(true)
 
+      const payload = {
+        id: threadId,
+        asistente_id: asistenteId,
+        input: texto,
+        ...(isProfesor ? {} : { alumno_id: alumnoId })
+      }
+
       try {
         const res = await axios.post<Mensaje[]>(
           `${apiUrl}/threads/${threadId}`,
-          { id: threadId, asistente_id: asistenteId, input: texto, alumno_id: alumnoId },
+          payload,
           axiosConfig
         )
         setMessages(res.data)

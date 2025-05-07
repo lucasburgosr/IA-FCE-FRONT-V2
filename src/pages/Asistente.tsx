@@ -23,6 +23,8 @@ export function AsistenteEdit() {
   const asistenteId = useAsistenteStore(s => s.asistente_id)
   const apiUrl = import.meta.env.VITE_API_URL;
 
+  console.log(asistenteId)
+
   useEffect(() => {
 
     setLoading(true);
@@ -49,7 +51,7 @@ export function AsistenteEdit() {
     setError("");
     try {
       await axios.put(
-        `${apiUrl}/asistentes/asst_LMnzwqHscAlIEBRRrWzB6myW`,
+        `${apiUrl}/asistentes/${asistenteId}`,
         {
           name: name,
           instructions: instructions

@@ -45,7 +45,7 @@ const Login = () => {
       if (userType === "alumno") {
         navigate("/chat")
       } else if (userType === "profesor") {
-        navigate("/chat")
+        navigate("/alumnos")
       }
 
     } catch(error: any) {

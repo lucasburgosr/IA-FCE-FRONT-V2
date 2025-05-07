@@ -116,7 +116,7 @@ export function AppSidebar() {
                     <SidebarGroupLabel>Menú</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu className="justify-center space-y-4">
-                            {alumno && <Select onValueChange={handleSelectAsistente}>
+                            {(alumno && userType === "alumno") && <Select onValueChange={handleSelectAsistente}>
                                 <SelectTrigger className="w-[180px]">
                                     <SelectValue placeholder="Elige un asistente…" />
                                 </SelectTrigger>
@@ -136,6 +136,8 @@ export function AppSidebar() {
                                 .filter(item => {
                                     if (["Alumnos", "Asistente"].includes(item.title) && userType !== "profesor") {
                                         return false;
+                                    } else if (["Tutor FCE"].includes(item.title) && userType !== "alumno"){
+                                        return false
                                     }
                                     return true;
                                 })
