@@ -47,17 +47,8 @@ export default function Home() {
     [token]
   )
 
-  // Thread temporal para profesor
-  const temporalThreadIdKey = "temp_profesor_thread"
-  const getOrCreateTempThreadId = () => {
-    const existingId = localStorage.getItem(temporalThreadIdKey)
-    if (existingId) return existingId
-    const tempId = `prof-${Date.now()}`
-    localStorage.setItem(temporalThreadIdKey, tempId)
-    return tempId
-  }
-  const tempThreadId = isProfesor ? getOrCreateTempThreadId() : null
-  const threadId = isProfesor ? tempThreadId : alumno?.threads?.[0]?.id
+ 
+  const threadId = alumno?.threads?.[0]?.id
 
   const messagesContainerRef = useRef<HTMLDivElement>(null)
 
@@ -131,17 +122,6 @@ export default function Home() {
 
     fetchMensajes()
   }, [threadId, asistenteId, apiUrl, axiosConfig])
-
-  useEffect(() => {
-    if (!isProfesor) return
-
-    const cleanup = () => {
-      localStorage.removeItem(temporalThreadIdKey)
-    }
-
-    window.addEventListener("beforeunload", cleanup)
-    return () => window.removeEventListener("beforeunload", cleanup)
-  }, [])
 
   const handleCreateThread = useCallback(async () => {
     if (!asistenteId) return

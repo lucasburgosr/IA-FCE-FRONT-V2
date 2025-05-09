@@ -20,7 +20,7 @@ export default function SignUpPage() {
     const navigate = useNavigate()
     const apiUrl = import.meta.env.VITE_API_URL
 
-    // 1) Estado agrupado para el formulario
+    // Estado agrupado para el formulario
     const [formData, setFormData] = useState({
         nombres: "",
         apellido: "",
@@ -33,10 +33,10 @@ export default function SignUpPage() {
     const [errorMsg, setErrorMsg] = useState("")
     const [loading, setLoading] = useState(false)
 
-    // 2) Configuración de axios
+    // Configuración de axios
     const axiosConfig = { headers: { "Content-Type": "application/json" } }
 
-    // 3) Handler genérico para inputs
+    // Handler genérico para inputs
     const handleChange = useCallback(
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const { id, value } = e.target
@@ -45,7 +45,7 @@ export default function SignUpPage() {
         []
     )
 
-    // 4) Verificar que password y confirmPassword coincidan
+    // Verificar que password y confirmPassword coincidan
     const passwordsMatch = useCallback(() => {
         if (formData.password !== formData.confirmPassword) {
             setErrorMsg("Las contraseñas no coinciden")
@@ -55,7 +55,7 @@ export default function SignUpPage() {
         return true
     }, [formData.password, formData.confirmPassword])
 
-    // 5) Envío del formulario
+    // Envío del formulario
     const handleSubmit = useCallback(
         async (e: React.FormEvent<HTMLFormElement>) => {
             e.preventDefault()

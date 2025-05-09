@@ -1,6 +1,5 @@
-// src/pages/EditAssistantPage.tsx
 import React, { useEffect, useState } from "react";
-import { /* useParams, */ useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
@@ -12,7 +11,6 @@ import { AsistenteOpenAI } from "@/types/AsistenteOpenAI";
 import { useAsistenteStore } from "@/store/asistenteStore";
 
 export function AsistenteEdit() {
-  //const { asistente_id } = useParams<{ asistente_id: string }>();
   const navigate = useNavigate();
 
   const [Asistente, setAssistant] = useState<Asistente | AsistenteOpenAI | null>(null);
