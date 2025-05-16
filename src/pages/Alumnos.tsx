@@ -1,4 +1,3 @@
-// src/pages/Alumnos.tsx
 import { useEffect, useState, useMemo } from "react"
 import axios from "axios"
 import { useAuthStore } from "@/store/authStore"
@@ -15,16 +14,22 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import { useNavigate } from "react-router-dom"
 import Alumno from "@/types/Alumno"
 import { ResumenCell } from "@/components/resumen-modal"
+import { Button } from "@/components/ui/button"
+import { AlumnoStatsModal } from "@/components/estadisticas-modal"
 
 export function Alumnos() {
-  const navigate   = useNavigate()
+  const navigate = useNavigate()
   const profesorId = useAuthStore(s => s.usuario_id)
-  const token      = localStorage.getItem("token") ?? ""
+  const token = localStorage.getItem("token") ?? ""
+  const apiUrl = import.meta.env.VITE_API_URL
 
   const [alumnos, setAlumnos] = useState<Alumno[]>([])
   const [loading, setLoading] = useState(true)
-  const [error,   setError]   = useState<string | null>(null)
-  const apiUrl = import.meta.env.VITE_API_URL
+  const [error, setError] = useState<string | null>(null)
+
+  // Control del modal
+  const [isOpen, setIsOpen] = useState(false)
+  const [alumnoSeleccionado, setAlumnoSeleccionado] = useState<Alumno | null>(null)
 
   const axiosConfig = useMemo(() => ({
     headers: { Authorization: `Bearer ${token}` }
@@ -35,23 +40,30 @@ export function Alumnos() {
       navigate("/login")
       return
     }
+
     setLoading(true)
-    axios.get<Alumno[]>(
-      `${apiUrl}/profesores/${profesorId}/alumnos`,
-      axiosConfig
-    )
-    .then(res => {
-      setAlumnos(res.data)
-      setError(null)
-    })
-    .catch(err => {
-      console.error(err)
-      setError("No se pudieron cargar los alumnos.")
-    })
-    .finally(() => {
-      setLoading(false)
-    })
-  }, [profesorId, axiosConfig, navigate])
+
+    // 1) Creamos la función async dentro del efecto
+    const fetchAlumnos = async () => {
+      try {
+        const res = await axios.get<Alumno[]>(
+          `${apiUrl}/profesores/${profesorId}/alumnos`,
+          axiosConfig
+        )
+        setAlumnos(res.data)
+        setError(null)
+      } catch (err) {
+        console.error(err)
+        setError("No se pudieron cargar los alumnos.")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    // 2) La invocamos (sin await ni return)
+    fetchAlumnos()
+  }, [profesorId, axiosConfig, navigate, apiUrl])
+
 
   return (
     <div className="p-6">
@@ -69,27 +81,36 @@ export function Alumnos() {
               <TableCaption>Listado de alumnos que usan tus asistentes</TableCaption>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Apellido</TableHead>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Último inicio de sesión</TableHead>
-                  <TableHead>Mensajes enviados</TableHead>
-                  <TableHead>Tiempo de interacción</TableHead>
-                  <TableHead>Última sesión</TableHead>
+                  <TableHead className="text-center">Apellido</TableHead>
+                  <TableHead className="text-center">Nombre</TableHead>
+                  <TableHead className="text-center">Email</TableHead>
+                  <TableHead className="text-center">Último login</TableHead>
+                  <TableHead className="text-center">Interacción</TableHead>
+                  <TableHead className="text-center">Última sesión</TableHead>
+                  <TableHead className="text-center">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody>
+              <TableBody className="text-center">
                 {alumnos.map(a => (
                   <TableRow key={a.id}>
                     <TableCell>{a.apellido}</TableCell>
                     <TableCell>{a.nombres}</TableCell>
                     <TableCell>{a.email}</TableCell>
-                    <TableCell>
-                      {new Date(a.last_login).toLocaleString()}
-                    </TableCell>
-                    <TableCell>{a.mensajes_enviados}</TableCell>
+                    <TableCell>{new Date(a.last_login).toLocaleString()}</TableCell>
                     <TableCell>{a.tiempo_interaccion}</TableCell>
-                    <ResumenCell resumen={a.resumen_ultima_sesion}></ResumenCell>
+                    <ResumenCell resumen={a.resumen_ultima_sesion} />
+                    <TableCell>
+                      <Button
+                        className="w-full mt-2 bg-blue-700 hover:bg-blue-800 text-white"
+                        variant="outline"
+                        onClick={() => {
+                          setAlumnoSeleccionado(a)
+                          setIsOpen(true)
+                        }}
+                      >
+                        Ver estadísticas
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -97,6 +118,18 @@ export function Alumnos() {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal fuera de la tabla */}
+      {alumnoSeleccionado && (
+        <AlumnoStatsModal
+          alumno={alumnoSeleccionado}
+          open={isOpen}
+          onOpenChange={(open) => {
+            setIsOpen(open)
+            if (!open) setAlumnoSeleccionado(null)
+          }}
+        />
+      )}
     </div>
   )
 }
